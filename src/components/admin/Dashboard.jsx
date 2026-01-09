@@ -655,18 +655,47 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
+  // const fetchDashboardData = async () => {
+  //   try {
+  //     setLoading(true);
+  //     const data = await adminService.getDashboard();
+  //     setDashboardData(data);
+  //   } catch (err) {
+  //     setError(err.message || 'Failed to load dashboard data');
+  //     console.error('Error fetching dashboard:', err);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
   const fetchDashboardData = async () => {
-    try {
-      setLoading(true);
-      const data = await adminService.getDashboard();
-      setDashboardData(data);
-    } catch (err) {
-      setError(err.message || 'Failed to load dashboard data');
-      console.error('Error fetching dashboard:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  try {
+    setLoading(true);
+
+    const res = await adminService.getAllBusinesses(0, 100);
+    const businesses = res.data || [];
+
+    const totalBusinesses = res.total || businesses.length;
+    const activeBusinesses = businesses.filter(
+      b => b.status === 'ACTIVE'
+    ).length;
+
+    const dashboardData = {
+      totalBusinesses,
+      activeBusinesses,
+      applicationsByType: {}, // placeholder
+      recentBusinesses: businesses.slice(0, 5),
+    };
+
+    setDashboardData(dashboardData);
+
+  } catch (err) {
+    console.error(err);
+    setError('Failed to load dashboard data');
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   const businessColumns = [
     {

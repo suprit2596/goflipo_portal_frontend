@@ -2480,7 +2480,7 @@ const CreateApplication = ({ application, tenantId, isEditMode = false, onSucces
   const [businesses, setBusinesses] = useState([]);
   const [loadingBusinesses, setLoadingBusinesses] = useState(true);
   const [selectedFields, setSelectedFields] = useState([]);
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const formik = useFormik({
     initialValues: {

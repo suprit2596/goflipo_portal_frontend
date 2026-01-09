@@ -276,7 +276,7 @@ const Navbar = ({ onMenuClick }) => {
                 display: { xs: 'none', md: 'block' },
               }}
             >
-              Pinnacle CDP
+              GOFLIPO
             </Typography>
             <Typography 
               variant="caption" 

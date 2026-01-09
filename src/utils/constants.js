@@ -10,20 +10,20 @@ export const ROUTES = {
   NOT_FOUND: '/404',
 };
 
-export const USER_ROLES = {
-  ADMIN: 'ADMIN',
-  BUSINESS_USER: 'BUSINESS_USER',
-};
-
 export const BUSINESS_STATUS = {
   ACTIVE: 'ACTIVE',
   INACTIVE: 'INACTIVE'
  
 };
 
+export const USER_ROLES = {
+  ADMIN: 'admin',
+  BUSINESS_USER: 'business',
+};
+
 export const BUSINESS_STATUS_COLORS = {
   [BUSINESS_STATUS.ACTIVE]: 'success',
-  [BUSINESS_STATUS.INACTIVE]: 'warning',
+  [BUSINESS_STATUS.INACTIVE]: 'error',
   [BUSINESS_STATUS.SUSPENDED]: 'error',
 };
 

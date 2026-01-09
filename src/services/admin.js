@@ -82,12 +82,57 @@ export const adminService = {
   // Business CRUD
   getDashboard: () => api.get('/admin/dashboard'),
   
-  getAllBusinesses: () => api.get('/admin/businesses'),
+  // getAllBusinesses: () => api.get('/admin/businesses'),
   
-  getBusiness: (tenantId) => api.get(`/admin/business/${tenantId}`),
+  // getBusiness: (tenantId) => api.get(`/admin/business/${tenantId}`),
   
-  createBusiness: (businessData) => api.post('/admin/business', businessData),
+  // createBusiness: (businessData) => api.post('/admin/business', businessData),
   
+  // getAllBusinesses: () => 
+  //   api.get('/api/businesses').then(res => res.data),
+    // getAllBusinesses: (page = 0, limit = 10, search = '', status = '') =>
+    // api.get("/api/businesses", {
+    //   params: {
+    //     page: page + 1, // backend is 1-based
+    //     limit,
+    //     search,
+    //     status: status !== 'ALL' ? status : ''
+    //   },
+    // }).then(res => res.data),
+
+    // getBusiness: (id) => 
+    //   api.get(`/api/business/${id}`).then(res => res.data),
+
+    // createBusiness: (businessData) => 
+    //   api.post('/api/business', businessData)
+    //     .then(res => res.data)
+    //     .catch(error => {
+    //       // Extract the actual error message from 
+    //       const errorMessage = error.response?.data?.error || 
+    //                           error.response?.data?.message || 
+    //                           error.message;
+    //       throw new Error(errorMessage);
+    //     }),
+  
+  getAllBusinesses: (page = 0, limit = 10, search = '', status = '') =>
+    api
+      .get('/api/businesses', {
+        params: {
+          page: page + 1,
+          limit,
+          search,
+          status: status === 'ALL' ? '' : status,
+        },
+      })
+      .then((res) => res.data),
+
+  getBusiness: (id) =>
+    api.get(`/api/business/${id}`).then((res) => res.data),
+
+  createBusiness: (businessData) =>
+    api.post('/api/business', businessData).then((res) => res.data),
+
+
   updateBusiness: (tenantId, businessData) => 
     api.put(`/admin/business/${tenantId}`, businessData),
   
@@ -119,7 +164,7 @@ export const adminService = {
   getBusinessUsers: (tenantId) => 
     api.get(`/admin/business/${tenantId}/users`),
 
-
+  
 
  // Optional: Add these if your backend supports them
   deleteUser: (userId) => 
