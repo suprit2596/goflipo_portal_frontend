@@ -672,6 +672,7 @@ const AdminDashboard = () => {
     setLoading(true);
 
     const res = await adminService.getAllBusinesses(0, 100);
+    console.log('Fetched businesses for dashboard:', res.data);
     const businesses = res.data || [];
 
     const totalBusinesses = res.total || businesses.length;

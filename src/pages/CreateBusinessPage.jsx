@@ -130,23 +130,23 @@ const CreateBusinessPage = () => {
 
   return (
     <Container maxWidth="lg">
-      <Box sx={{ py: 2 }}>
+      <Box sx={{ py: 0 }}>
         <Button
           startIcon={<ArrowBack />}
           onClick={() => navigate('/admin/businesses')}
-          sx={{ mb: 1 }}
+          sx={{ mr: 2 }}
         >
           Back
         </Button>
-
+{/* 
         <Typography variant="h5" sx={{ mb: 2 }}>
           {isEditMode ? 'Edit Business' : 'Create Business'}
-        </Typography>
+        </Typography> */}
 
         {error && <Alert severity="error">{error}</Alert>}
 
         {loading && isEditMode ? (
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 6 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 9 }}>
             <CircularProgress />
           </Box>
         ) : (
