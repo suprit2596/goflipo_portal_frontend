@@ -17,6 +17,9 @@ import {
   AddBusiness,
   AddCircle,
   PersonAdd as PersonAddIcon,
+  People as PeopleIcon,
+  History as HistoryIcon,
+
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
 import { ROUTES } from '../../utils/constants';
@@ -32,13 +35,18 @@ const Sidebar = ({ open, onClose }) => {
     { text: 'Dashboard', icon: <DashboardIcon />, path: ROUTES.ADMIN_DASHBOARD },
     { text: 'Businesses', icon: <BusinessIcon />, path: ROUTES.ADMIN_BUSINESSES },
     { text: 'Create Business', icon: <AddBusiness />, path: ROUTES.ADMIN_CREATE_BUSINESS },
-    { text: 'Create Application', icon: <AddCircle />, path: ROUTES.ADMIN_CREATE_APPLICATION },
-    { text: 'Create Business User', icon: <PersonAddIcon />, path: ROUTES.ADMIN_CREATE_BUSINESS_USER },
+    { text: 'Subscribers', icon: <PeopleIcon />, path: '/admin/subscribers' },
+    { text: 'AuditLogs', icon: <HistoryIcon />, path: ROUTES.ADMIN_LOGS },
+    // { text: 'Create Application', icon: <AddCircle />, path: ROUTES.ADMIN_CREATE_APPLICATION },
+    // { text: 'Create Business User', icon: <PersonAddIcon />, path: ROUTES.ADMIN_CREATE_BUSINESS_USER },
   ];
 
   const businessMenuItems = [
     { text: 'Dashboard', icon: <DashboardIcon />, path: ROUTES.BUSINESS_DASHBOARD },
-    { text: 'Applications', icon: <AppsIcon />, path: ROUTES.BUSINESS_APPLICATIONS },
+   { text: 'Transactions', icon: <AppsIcon />, path: ROUTES.BUSINESS_TRANSACTIONS },
+   { text: 'Subscribers', icon: <PeopleIcon />, path: '/business/subscribers' },
+   { text: 'Audit Logs', icon: <HistoryIcon />, path: '/business/audit-logs' }
+
   ];
 
   const menuItems = isAdmin ? adminMenuItems : businessMenuItems;

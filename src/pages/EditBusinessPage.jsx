@@ -13,6 +13,7 @@ import { ArrowBack } from '@mui/icons-material';
 import CreateBusiness from '../components/admin/CreateBusiness';
 import { adminService } from '../services/admin';
 
+
 const EditBusinessPage = () => {
   const { tenantId } = useParams();
   const navigate = useNavigate();
@@ -26,22 +27,28 @@ const EditBusinessPage = () => {
     }
   }, [tenantId]);
 
-  const fetchBusiness = async () => {
-    try {
-      setLoading(true);
-      const data = await adminService.getBusiness(tenantId);
-      setBusiness(data);
-    } catch (err) {
-      setError('Failed to load business details');
-      console.error('Error fetching business:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchBusiness = async () => {
+  try {
+    setLoading(true);
+    const response = await adminService.getBusiness(tenantId);
+    
+    // ✅ Extract the actual business data from the nested response
+    // The response structure: { success: true, data: { _doc: { ... } } }
+    const businessData = response.data?._doc || response.data || response;
+    
+    setBusiness(businessData);
+  } catch (err) {
+    setError('Failed to load business details');
+    console.error('Error fetching business:', err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleSuccess = () => {
     navigate('/admin/businesses');
   };
+
 
   if (loading) {
     return (

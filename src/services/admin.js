@@ -196,33 +196,66 @@
 // };
 
 
+import { ConstructionOutlined } from '@mui/icons-material';
 import { api } from './api';
 
 export const adminService = {
   getDashboard: () => api.get('/admin/dashboard'),
 
-  getAllBusinesses: (page = 0, limit = 10, search = '', status = '') =>
-    api
-      .get('/api/businesses', {
+  // getAllBusinesses: (page = 0, limit = 10, search = '', status = '') =>
+  //   api
+  //     .get('/api/businesses', {
+  //       params: {
+  //         page: page + 1,
+  //         limit,
+  //         search,
+  //         status: status === 'ALL' ? '' : status,
+  //       },
+  //     })
+  //     .then((res) => res.data),
+
+  getAllBusinesses: (page = 0, limit = 10, search = '', status = '') => {
+  // If filtering for blocked businesses, use the specific endpoint
+  console.log(status, 'status in service'); // Add this
+    
+  if (status === 'BLOCKED') {
+      console.log('Calling blocked endpoint'); 
+    return api
+      .get('/api/businesses/blocked', {
         params: {
           page: page + 1,
           limit,
           search,
-          status: status === 'ALL' ? '' : status,
         },
       })
-      .then((res) => res.data),
-
+      .then((res) => res.data);
+     
+  }
+  
+  // Otherwise use the regular endpoint
+   console.log('Calling regular endpoint with status:', status); // Add this
+   
+  return api
+    .get('/api/businesses', {
+      params: {
+        page: page + 1,
+        limit,
+        search,
+        status: status === 'ALL' ? '' : status,
+      },
+    })
+    .then((res) => res.data);
+},
   getBusiness: (id) =>
     api.get(`/api/business/${id}`).then((res) => res.data),
 
   createBusiness: (businessData) =>
     api.post('/api/business', businessData).then((res) => res.data),
 
-  updateBusiness: (tenantId, businessData) => 
-    api.put(`/admin/business/${tenantId}`, businessData),
+  // updateBusiness: (tenantId, businessData) => 
+  //   api.put(`/admin/business/${tenantId}`, businessData),
 
-  deleteBusiness: (tenantId) => api.delete(`/admin/business/${tenantId}`),
+  // deleteBusiness: (tenantId) => api.delete(`/admin/business/${tenantId}`),
 
   // 🔐 Fetch decrypted secret key
   getBusinessSecret: (id) =>
@@ -250,8 +283,8 @@ export const adminService = {
   createBusinessUser: (tenantId, userData) => 
     api.post(`/admin/business/${tenantId}/users`, userData),
 
-  getBusinessUsers: (tenantId) => 
-    api.get(`/admin/business/${tenantId}/users`),
+  // getBusinessUsers: (tenantId) => 
+  //   api.get(`/admin/business/${tenantId}/users`),
 
   deleteUser: (userId) => 
     api.delete(`/admin/users/${userId}`),
@@ -264,4 +297,38 @@ export const adminService = {
 
   updateUserStatus: (userId, status) => 
     api.put(`/admin/users/${userId}/status`, { status }),
+
+  
+  // ✅ BLOCK BUSINESS - Add this
+  blockBusiness: (tenantId, blockReason) =>
+    api.put(`/api/business/${tenantId}/block`, { blockReason })
+      .then(res => res.data),
+
+  // ✅ UNBLOCK BUSINESS - Using PUT and tenantId
+  unblockBusiness: (tenantId,reason) =>
+    api.put(`/api/business/${tenantId}/unblock`, {unblockReason: reason})
+      .then(res => res.data),
+
+
+      // ✅ Update business (new)
+  updateBusiness: (tenantId, data) =>
+    api.put(`/api/business/${tenantId}`, data).then(res => res.data),
+
+  // ✅ Delete business (new)
+  deleteBusiness: (tenantId) =>
+    api.delete(`/api/business/${tenantId}`).then(res => res.data),
+
+// Inside the admin service object
+  updateBusinessMetadata: (businessId, metadata) =>
+    api.post(`/api/${businessId}/metadata`, metadata).then(res => res.data),
+
+ getBusinessUsers: (tenantId, page, limit, search) =>
+  api.get(`/api/admin/subscribers/${tenantId}/users`, {
+    params: { page: page + 1, limit, search }
+  }).then(res => res.data),
+
+  // services/admin.js
+getAdminStats: () =>
+  api.get('/api/admin/subscribers/admin/stats').then((res) => res.data),
 };
+

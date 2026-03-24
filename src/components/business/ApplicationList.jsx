@@ -949,4 +949,4 @@ const ApplicationList = () => {
   );
 };
 
-export default ApplicationList; 
+export default ApplicationList;

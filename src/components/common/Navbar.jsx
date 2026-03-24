@@ -126,7 +126,7 @@
 
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Logo from '../../assets/pinnale.jpg';
+import Logo from '../../assets/pinnale2.jpg';
 import {
   AppBar,
   Toolbar,
@@ -165,6 +165,7 @@ const Navbar = ({ onMenuClick }) => {
   const { user, logout, isAdmin } = useAuth();
   const [anchorEl, setAnchorEl] = useState(null);
   const [notificationAnchor, setNotificationAnchor] = useState(null);
+  const [activeRole, setActiveRole] = useState(null);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -182,11 +183,38 @@ const Navbar = ({ onMenuClick }) => {
     setNotificationAnchor(null);
   };
 
-  const handleLogout = () => {
+ const handleLogout = async () => {
+  const role = sessionStorage.getItem("active_role");
+  console.log('Active role at logout:', role); // should be "business"
+
+  // Try to navigate using React Router first
+  let navigationSuccessful = false;
+  try {
+    if (role === "admin") {
+      navigate("/admin-login");
+    } else {
+      navigate("/business-login");
+    }
+    navigationSuccessful = true;
+  } catch (err) {
+    console.error("Navigation failed:", err);
+  }
+
+  // If React Router navigation fails, fall back to window.location
+  if (!navigationSuccessful) {
+    if (role === "admin") {
+      window.location.href = "/admin-login";
+    } else {
+      window.location.href = "/business-login";
+    }
+  }
+
+  // Delay logout slightly to ensure navigation starts before clearing state
+  setTimeout(() => {
     logout();
-    navigate(ROUTES.LOGIN);
     handleClose();
-  };
+  }, 0);
+};
 
   const handleProfile = () => {
     navigate('/profile');
@@ -236,62 +264,63 @@ const Navbar = ({ onMenuClick }) => {
           <MenuIcon />
         </IconButton>
         
-        {/* Logo and Title */}
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
-        
-         <Box
-           onClick={() => navigate(ROUTES.DASHBOARD)}
-  sx={{
-    width: 44,
-    height: 44,
-    borderRadius: 2,
-    backgroundColor: 'white',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-    overflow: 'hidden',
-  }}
->
-  <Box
-    component="img"
-    src={Logo}
-    alt="Pinnacle Logo"
-    sx={{
-      width: '100%',
-      height: '100%',
-      objectFit: 'contain',
-      p: 0.5,
-    }}
-  />
-</Box>
-          <Box>
-            <Typography 
-              variant="h6" 
-              noWrap 
-              component="div" 
-              sx={{ 
-                fontWeight: 700,
-                letterSpacing: 0.5,
-                display: { xs: 'none', md: 'block' },
-              }}
-            >
-              GOFLIPO
-            </Typography>
-            <Typography 
-              variant="caption" 
-              sx={{ 
-                opacity: 0.9,
-                display: { xs: 'none', lg: 'block' },
-                fontSize: '0.7rem',
-                letterSpacing: 0.5,
-              }}
-            >
-              Business Onboarding Platform
-            </Typography>
-          </Box>
+       {/* Logo and Title */}
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+        <Box
+          onClick={() => navigate(ROUTES.DASHBOARD)}
+          sx={{
+            height: 44, // Keep fixed height
+            width: 'auto', // Change from 44 to 'auto'
+            minWidth: 44, // Add minimum width
+            borderRadius: 2,
+            backgroundColor: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            overflow: 'hidden',
+            padding: '0 8px', // Add horizontal padding to prevent touching edges
+            cursor: 'pointer',
+          }}
+        >
+          <Box
+            component="img"
+            src={Logo}
+            alt="Pinnacle Logo"
+            sx={{
+              height: '80%', // Use percentage instead of 100%
+              width: 'auto', // Allow natural width
+              maxWidth: '100%', // Prevent overflow
+              objectFit: 'contain',
+            }}
+          />
         </Box>
-        
+        {/* <Box>
+          <Typography 
+            variant="h6" 
+            noWrap 
+            component="div" 
+            sx={{ 
+              fontWeight: 700,
+              letterSpacing: 0.5,
+              display: { xs: 'none', md: 'block' },
+            }}
+          >
+            GOFLIPO
+          </Typography>
+          <Typography 
+            variant="caption" 
+            sx={{ 
+              opacity: 0.9,
+              display: { xs: 'none', lg: 'block' },
+              fontSize: '0.7rem',
+              letterSpacing: 0.5,
+            }}
+          >
+            Tracebility and Transparency Platform
+          </Typography>
+        </Box> */}
+      </Box>
 
 
 
@@ -345,7 +374,7 @@ const Navbar = ({ onMenuClick }) => {
           >
             <Box sx={{ textAlign: 'right' }}>
               <Typography variant="body2" fontWeight={600} sx={{ lineHeight: 1.2 }}>
-                {user?.fullName || user?.email?.split('@')[0] || 'User'}
+                {user?.businessName || user?.fullName || user?.email?.split('@')[0] || 'User'}
               </Typography>
               <Typography variant="caption" sx={{ opacity: 0.8, fontSize: '0.7rem' }}>
                 {user?.email}
@@ -408,14 +437,14 @@ const Navbar = ({ onMenuClick }) => {
           }}
         >
           {/* User Info in Menu */}
-          <Box sx={{ px: 2, py: 1.5, mb: 1 }}>
-            <Typography variant="subtitle2" fontWeight={600}>
-              {user?.fullName || 'User'}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {user?.email}
-            </Typography>
-          </Box>
+         <Box sx={{ px: 2, py: 1.5, mb: 1 }}>
+          <Typography variant="subtitle2" fontWeight={600}>
+            {user?.businessName || user?.fullName || 'User'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {user?.email}
+          </Typography>
+        </Box>
           
           <Divider />
 

@@ -622,27 +622,24 @@ import {
   Typography,
   Box,
   Paper,
-  Card,
-  CardContent,
   Container,
   Fade,
   Avatar,
   Chip,
+ 
 } from '@mui/material';
 import {
   Business as BusinessIcon,
-  Apps as AppsIcon,
-  TrendingUp,
-  People as PeopleIcon,
   CheckCircle,
-  Whatshot,
+   
+
+  
 } from '@mui/icons-material';
-import DashboardCard from '../common/DashboardCard';
 import DataTable from '../common/DataTable';
 import LoadingSpinner from '../common/LoadingSpinner';
 import { adminService } from '../../services/admin';
-import { formatDate } from '../../utils/formatters';
 import { BUSINESS_STATUS_COLORS } from '../../utils/constants';
+import { adminSubscriberService } from '../../services/adminSubscriber';
 
 const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
@@ -655,40 +652,26 @@ const AdminDashboard = () => {
     fetchDashboardData();
   }, []);
 
-  // const fetchDashboardData = async () => {
-  //   try {
-  //     setLoading(true);
-  //     const data = await adminService.getDashboard();
-  //     setDashboardData(data);
-  //   } catch (err) {
-  //     setError(err.message || 'Failed to load dashboard data');
-  //     console.error('Error fetching dashboard:', err);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-  const fetchDashboardData = async () => {
+ const fetchDashboardData = async () => {
   try {
     setLoading(true);
 
-    const res = await adminService.getAllBusinesses(0, 100);
-    console.log('Fetched businesses for dashboard:', res.data);
-    const businesses = res.data || [];
+    const [stats, bizRes] = await Promise.all([
+      adminService.getAdminStats(),          // ← single lightweight call for all KPIs
+      adminService.getAllBusinesses(0, 10),  // ← only for the recent businesses table
+    ]);
 
-    const totalBusinesses = res.total || businesses.length;
-    const activeBusinesses = businesses.filter(
-      b => b.status === 'ACTIVE'
-    ).length;
+    const businesses = (bizRes.data || []).map((b) => ({
+      ...b,
+      businessId: b.tenantId || b._id,
+      contactEmail: b.email || b.contactEmail,
+      status: b.accountStatus || b.status,
+    }));
 
-    const dashboardData = {
-      totalBusinesses,
-      activeBusinesses,
-      applicationsByType: {}, // placeholder
-      recentBusinesses: businesses.slice(0, 5),
-    };
-
-    setDashboardData(dashboardData);
-
+    setDashboardData({
+      ...stats,               // spreads all 5 KPI counts directly
+      recentBusinesses: businesses,
+    });
   } catch (err) {
     console.error(err);
     setError('Failed to load dashboard data');
@@ -697,37 +680,28 @@ const AdminDashboard = () => {
   }
 };
 
-
-  const businessColumns = [
-    {
-      field: 'businessName',
-      headerName: 'Business Name',
-      sortable: true,
-    },
-    {
-      field: 'industry',
-      headerName: 'Industry',
-      sortable: true,
-    },
-    {
-      field: 'email',
-      headerName: 'Contact Email',
-      sortable: true,
-    },
-    {
-      field: 'applicationCount',
-      headerName: 'Applications',
-      sortable: true,
-      align: 'right',
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      sortable: true,
-      type: 'status',
-      statusColors: BUSINESS_STATUS_COLORS,
-    },
-  ];
+ const businessColumns = [
+  { field: 'businessId', headerName: 'Business ID', sortable: true },
+  { field: 'businessName', headerName: 'Business Name', sortable: true },
+  { field: 'industry', headerName: 'Industry', sortable: true },
+  { field: 'contactEmail', headerName: 'Email', sortable: true },  // mapped above
+  { field: 'websiteUrl', headerName: 'Website', sortable: false,
+    render: (v) => v
+      ? <Typography variant="caption" component="a" href={v} target="_blank"
+          sx={{ color: '#3b82f6', textDecoration: 'none', '&:hover': { textDecoration: 'underline' } }}>
+          {v}
+        </Typography>
+      : '—'
+  },
+  {
+    field: 'status',
+    headerName: 'Status',
+    sortable: true,
+    render: (value) => (
+      <Chip label={value} size="small" color={BUSINESS_STATUS_COLORS[value] || 'default'} />
+    ),
+  },
+];
 
   if (loading) {
     return <LoadingSpinner fullScreen />;
@@ -765,11 +739,6 @@ const AdminDashboard = () => {
     );
   }
 
-  const totalApps = Object.values(dashboardData.applicationsByType || {}).reduce((a, b) => a + b, 0);
-  const avgAppsPerBusiness = dashboardData.totalBusinesses > 0 
-    ? (totalApps / dashboardData.totalBusinesses).toFixed(1)
-    : 0;
-
   return (
     <Box
       sx={{
@@ -781,176 +750,83 @@ const AdminDashboard = () => {
       <Container maxWidth="xl">
         <Fade in timeout={600}>
           <Box>
-            {/* Header */}
             <Box sx={{ mb: 4 }}>
               <Typography variant="h3" fontWeight={700} sx={{ color: '#0f172a', mb: 1 }}>
                 Admin Dashboard
               </Typography>
               <Typography variant="body1" sx={{ color: '#64748b' }}>
-                Monitor and manage your platform's businesses and applications
+                Monitor and manage your platform's businesses
               </Typography>
             </Box>
 
-            {/* Stats Cards */}
             <Grid container spacing={3} sx={{ mb: 4 }}>
-              {/* Total Businesses */}
-              <Grid item xs={12} sm={6} md={3}>
-                <Fade in timeout={700}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      borderRadius: 3,
-                      p: 3,
-                      border: '1px solid #e0e7ff',
-                      background: '#f0f4ff',
-                      height: '100%',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 12px 24px rgba(99, 102, 241, 0.12)',
-                        borderColor: '#c7d2fe',
-                      },
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Box>
-                        <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600, mb: 1 }}>
-                          Total Businesses
-                        </Typography>
-                        <Typography variant="h3" fontWeight={700} sx={{ color: '#4338ca' }}>
-                          {dashboardData.totalBusinesses}
-                        </Typography>
-                      </Box>
-                      <Avatar sx={{ background: '#e0e7ff', color: '#6366f1', width: 48, height: 48 }}>
-                        <BusinessIcon />
-                      </Avatar>
-                    </Box>
-                    <Typography variant="caption" sx={{ color: '#6366f1', fontWeight: 600 }}>
-                      All registered tenants
-                    </Typography>
-                  </Paper>
-                </Fade>
-              </Grid>
 
-              {/* Active Businesses */}
-              <Grid item xs={12} sm={6} md={3}>
-                <Fade in timeout={800}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      borderRadius: 3,
-                      p: 3,
-                      border: '1px solid #d1fae5',
-                      background: '#ecfdf5',
-                      height: '100%',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 12px 24px rgba(16, 185, 129, 0.12)',
-                        borderColor: '#a7f3d0',
-                      },
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Box>
-                        <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 600, mb: 1 }}>
-                          Active Businesses
-                        </Typography>
-                        <Typography variant="h3" fontWeight={700} sx={{ color: '#047857' }}>
-                          {dashboardData.activeBusinesses}
-                        </Typography>
-                      </Box>
-                      <Avatar sx={{ background: '#d1fae5', color: '#10b981', width: 48, height: 48 }}>
-                        <CheckCircle />
-                      </Avatar>
-                    </Box>
-                    <Typography variant="caption" sx={{ color: '#10b981', fontWeight: 600 }}>
-                      Currently operational
-                    </Typography>
-                  </Paper>
-                </Fade>
-              </Grid>
+  {/* Total Businesses */}
+  <Grid item xs={12} sm={6} md={2.4}>
+    <Paper elevation={0} sx={{ borderRadius: 3, p: 3, border: '1px solid #e0e7ff', background: '#f0f4ff', height: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="body2" sx={{ color: '#6366f1', fontWeight: 600, mb: 1 }}>Total Businesses</Typography>
+          <Typography variant="h3" fontWeight={700} sx={{ color: '#4338ca' }}>{dashboardData.totalBusinesses}</Typography>
+        </Box>
+        <Avatar sx={{ background: '#e0e7ff', color: '#6366f1', width: 48, height: 48 }}><BusinessIcon /></Avatar>
+      </Box>
+    </Paper>
+  </Grid>
 
-              {/* Total Applications */}
-              <Grid item xs={12} sm={6} md={3}>
-                <Fade in timeout={900}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      borderRadius: 3,
-                      p: 3,
-                      border: '1px solid #e0f2fe',
-                      background: '#f0f9ff',
-                      height: '100%',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 12px 24px rgba(14, 165, 233, 0.12)',
-                        borderColor: '#bae6fd',
-                      },
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Box>
-                        <Typography variant="body2" sx={{ color: '#0ea5e9', fontWeight: 600, mb: 1 }}>
-                          Total Applications
-                        </Typography>
-                        <Typography variant="h3" fontWeight={700} sx={{ color: '#0369a1' }}>
-                          {totalApps}
-                        </Typography>
-                      </Box>
-                      <Avatar sx={{ background: '#e0f2fe', color: '#0ea5e9', width: 48, height: 48 }}>
-                        <AppsIcon />
-                      </Avatar>
-                    </Box>
-                    <Typography variant="caption" sx={{ color: '#0ea5e9', fontWeight: 600 }}>
-                      Across all businesses
-                    </Typography>
-                  </Paper>
-                </Fade>
-              </Grid>
+  {/* Active Businesses */}
+  <Grid item xs={12} sm={6} md={2.4}>
+    <Paper elevation={0} sx={{ borderRadius: 3, p: 3, border: '1px solid #d1fae5', background: '#ecfdf5', height: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="body2" sx={{ color: '#10b981', fontWeight: 600, mb: 1 }}>Active Businesses</Typography>
+          <Typography variant="h3" fontWeight={700} sx={{ color: '#047857' }}>{dashboardData.activeBusinesses}</Typography>
+        </Box>
+        <Avatar sx={{ background: '#d1fae5', color: '#10b981', width: 48, height: 48 }}><CheckCircle /></Avatar>
+      </Box>
+    </Paper>
+  </Grid>
 
-              {/* Avg Apps/Business */}
-              {/* <Grid item xs={12} sm={6} md={3}>
-                <Fade in timeout={1000}>
-                  <Paper
-                    elevation={0}
-                    sx={{
-                      borderRadius: 3,
-                      p: 3,
-                      border: '1px solid #fce7f3',
-                      background: '#fdf2f8',
-                      height: '100%',
-                      transition: 'all 0.3s ease',
-                      '&:hover': {
-                        transform: 'translateY(-4px)',
-                        boxShadow: '0 12px 24px rgba(236, 72, 153, 0.12)',
-                        borderColor: '#fbcfe8',
-                      },
-                    }}
-                  >
-                    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 2 }}>
-                      <Box>
-                        <Typography variant="body2" sx={{ color: '#ec4899', fontWeight: 600, mb: 1 }}>
-                          Avg Apps/Business
-                        </Typography>
-                        <Typography variant="h3" fontWeight={700} sx={{ color: '#be185d' }}>
-                          {avgAppsPerBusiness}
-                        </Typography>
-                      </Box>
-                      <Avatar sx={{ background: '#fce7f3', color: '#ec4899', width: 48, height: 48 }}>
-                        <TrendingUp />
-                      </Avatar>
-                    </Box>
-                    <Typography variant="caption" sx={{ color: '#ec4899', fontWeight: 600 }}>
-                      Per tenant average
-                    </Typography>
-                  </Paper>
-                </Fade>
-              </Grid> */}
-            </Grid>
+  {/* Blocked Businesses */}
+  <Grid item xs={12} sm={6} md={2.4}>
+    <Paper elevation={0} sx={{ borderRadius: 3, p: 3, border: '1px solid #fecaca', background: '#fef2f2', height: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="body2" sx={{ color: '#ef4444', fontWeight: 600, mb: 1 }}>Blocked Businesses</Typography>
+          <Typography variant="h3" fontWeight={700} sx={{ color: '#991b1b' }}>{dashboardData.blockedBusinesses}</Typography>
+        </Box>
+        <Avatar sx={{ background: '#fee2e2', color: '#ef4444', width: 48, height: 48 }}><BusinessIcon /></Avatar>
+      </Box>
+    </Paper>
+  </Grid>
 
-            {/* Recent Businesses Table */}
+  {/* Total Subscribers */}
+  <Grid item xs={12} sm={6} md={2.4}>
+    <Paper elevation={0} sx={{ borderRadius: 3, p: 3, border: '1px solid #e0f2fe', background: '#f0f9ff', height: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="body2" sx={{ color: '#0284c7', fontWeight: 600, mb: 1 }}>Total Subscribers</Typography>
+          <Typography variant="h3" fontWeight={700} sx={{ color: '#0369a1' }}>{dashboardData.totalSubscribers}</Typography>
+        </Box>
+        <Avatar sx={{ background: '#e0f2fe', color: '#0284c7', width: 48, height: 48 }}><BusinessIcon /></Avatar>
+      </Box>
+    </Paper>
+  </Grid>
+
+  {/* Blocked Subscribers */}
+  <Grid item xs={12} sm={6} md={2.4}>
+    <Paper elevation={0} sx={{ borderRadius: 3, p: 3, border: '1px solid #fde68a', background: '#fffbeb', height: '100%' }}>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <Box>
+          <Typography variant="body2" sx={{ color: '#d97706', fontWeight: 600, mb: 1 }}>Blocked Users</Typography>
+          <Typography variant="h3" fontWeight={700} sx={{ color: '#92400e' }}>{dashboardData.blockedSubscribers}</Typography>
+        </Box>
+        <Avatar sx={{ background: '#fef3c7', color: '#d97706', width: 48, height: 48 }}><BusinessIcon /></Avatar>
+      </Box>
+    </Paper>
+  </Grid>
+
+</Grid>
             <Fade in timeout={1100}>
               <Paper
                 elevation={0}
@@ -982,6 +858,7 @@ const AdminDashboard = () => {
                     </Box>
                   </Box>
                 </Box>
+
                 <Box sx={{ p: 3, background: '#fafafa' }}>
                   <DataTable
                     columns={businessColumns}

@@ -16,8 +16,9 @@ const BusinessLayout = () => {
   };
 
   // Only render if user is business user
-  if (!user || user.role !== 'BUSINESS_USER') {
-    return null;
+  if (!user || user.role !== 'business') {
+
+    return <h1>Access defined</h1>;
   }
 
   return (

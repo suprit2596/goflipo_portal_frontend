@@ -35,6 +35,8 @@ const DataTable = ({
   sortBy,
   sortDirection = 'asc',
   onSort,
+  sx,
+  paginationSx,
 }) => {
   const [order, setOrder] = useState(sortDirection);
   const [orderBy, setOrderBy] = useState(sortBy);
@@ -85,8 +87,8 @@ const DataTable = ({
   };
 
   return (
-    <Paper sx={{ width: '100%', overflow: 'hidden' }}>
-      <TableContainer sx={{ maxHeight: 440 }}>
+    <Paper sx={{ width: '100%', overflow: 'hidden', display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, ...sx }}>
+      <TableContainer sx={{ flex: 1, minHeight: 0, overflow: 'auto' }}>
         <Table stickyHeader size="medium">
           <TableHead>
             <TableRow>
@@ -169,6 +171,18 @@ const DataTable = ({
         page={page}
         onPageChange={handleChangePage}
         onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+          // Default dark text for all pagination elements
+          '& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows, & .MuiSelect-select, & .MuiInputBase-root': {
+            color: '#0f172a', // Dark color (matches your table text)
+          },
+          // Ensure the select icon is also dark (optional)
+          '& .MuiSelect-icon': {
+            color: '#0f172a',
+          },
+          // Merge any custom styles passed via paginationSx
+          ...paginationSx,
+        }}
       />
     </Paper>
   );
